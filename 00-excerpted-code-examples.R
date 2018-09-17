@@ -9,14 +9,19 @@ library(tidyverse)
 library(dslabs)
 library(dplyr)
 library(ggplot2)
+library(grid)
+library(gridExtra)
+library(lattice)
 data(heights)
 
 # Dtacamp Exercises
 
 male <- heights$height[heights$sex=="Male"]
 female <- heights$height[heights$sex=="Female"]
+
 names(heights)
 head(heights)
+
 x <- heights$height
 length(unique(x))
 x <- heights$height
@@ -62,3 +67,33 @@ p2 <- heights %>%
      geom_density(col="#00BFC4", adjust = 2)
 
 grid.arrange(p1,p2, ncol=2)
+
+#
+# Distributions
+#
+
+# Numerical data, that are not categorical, also have distributions. In general,
+# when data is not categorical, reporting the frequency of each entry is not an
+# effective summary since most entries are unique. In our case study, while
+# several students reported a height of 68 inches, only one student reported a
+# height of 68.503937007874 inches and only one student reported a height
+# 68.8976377952756 inches. We assume that they converted from 174 and 175
+# centimeters respectively.
+
+# Statistics textbooks teach us that a more useful way to define a distribution
+# for numeric data is to define a function that reports the proportion of the
+# data below
+
+for all possible values of a. This function is called the cumulative distribution function (CDF). In statistics, the following notation is used:
+     
+     F
+(
+     a
+)
+=
+     Pr
+(
+     x
+     ≤
+     a
+)

@@ -46,11 +46,11 @@ data(heights)
 
 # For a list of numbers contained in a vector x, the average is defined as:
      
-average <- sum(x) / length(x)
+     average <- sum(x) / length(x)
 
 # and the SD is defined as:
      
-SD <- sqrt( sum( (x-mu)^2) / length(x))
+     SD <- sqrt( sum( (x-mu)^2) / length(x))
 
 # which can be interpreted as the average distance between values and their
 # average.
@@ -58,15 +58,15 @@ SD <- sqrt( sum( (x-mu)^2) / length(x))
 # Let’s compute the values for the height for males which we will store in the
 # object x;
 
-index <- heights$sex=="Male"
-x <- heights$height[index]
+     index <- heights$sex=="Male"
+     x <- heights$height[index]
 
 # The pre-built functions mean and sd [Footnote: SD divides by length(x)-1] can
 # be used here:
      
-average <- mean(x)
-SD <- sd(x)
-c(average=average,SD=SD)
+     average <- mean(x)
+     SD <- sd(x)
+     c(average=average,SD=SD)
 #> average      SD 
 #>   69.31    3.61
 
@@ -148,3 +148,87 @@ theoretical_quantiles <- qnorm( p, mean = mean(x), sd = sd(x))
 plot(theoretical_quantiles, observed_quantiles)
 abline(0,1)
 
+# Notice that this code becomes much cleaner if we use standard units:
+     
+observed_quantiles <- quantile(z, p)
+theoretical_quantiles <- qnorm(p) 
+plot(theoretical_quantiles, observed_quantiles)
+abline(0,1)
+
+# Percentiles are special cases of quantiles that are commonly used. The
+# percentiles are the quantiles you obtain when setting p at the .01, .02, ...
+# .99. We call, for example, the case of p = 0.25 the 25th percentile, which
+# gives us a number for which 25% of the data is below. The most famous
+# percentile is the 50th, also known as the median.
+
+# For the normal distribution the median and average are the same, but this is
+# generally not the case.
+
+# Another special case that receives a name are the quartiles , which are
+# obtained when setting p = 0.25, 0.50, and 0.75.
+
+# Using the histogram, density plots and qq-plots, we have become convinced that
+# the male height data is well approximated with a normal distribution. In this
+# case, we report back to ET a very succinct summary: male heights follow a
+# normal distribution with an average of 69.315 inches and a SD of 3.611 inches.
+# With this information ET will have a good idea of what to expect when he meets
+# our male students.
+
+# --------------------------------------------------------------------------------
+# 19.6 - Case Study on Self-Reported Heights
+# --------------------------------------------------------------------------------
+
+data(reported_heights)
+str(reported_heights)
+#> 'data.frame':    1095 obs. of  3 variables:
+#>  $ time_stamp: chr  "2014-09-02 13:40:36" "2014-09-02 13:46:59" "2014-09-02 13:59:20" "2014-09-02 14:51:53" ...
+#>  $ sex       : chr  "Male" "Male" "Male" "Male" ...
+#>  $ height    : chr  "75" "70" "68" "74" ...
+
+# Height is a character vector so we create a new column with the numeric version:
+     
+reported_heights <- reported_heights %>%
+mutate(original_heights = height, height = as.numeric(height))
+
+# We get a warning about NAs. This is because some of the self reported heights
+# were not numbers. We can see why we get these:
+     
+     reported_heights %>% 
+     filter(is.na(height)) %>% 
+     head()
+
+#>            time_stamp    sex height original_heights
+#> 1 2014-09-02 15:16:28   Male     NA            5' 4"
+#> 2 2014-09-02 15:16:37 Female     NA            165cm
+#> 3 2014-09-02 15:16:52   Male     NA              5'7
+#> 4 2014-09-02 15:16:56   Male     NA            >9000
+#> 5 2014-09-02 15:16:56   Male     NA             5'7"
+#> 6 2014-09-02 15:17:09 Female     NA             5'3"
+
+# Some students self reported their heights using feet and inches rather than
+# just inches. Others used centimeters and others were just trolling. For now we
+# will remove these entries:
+     
+     reported_heights <- filter(reported_heights, !is.na(height))
+
+# If we compute the average and standard deviation, we notice that we obtain
+# strange results. The average and standard deviation are different from the
+# median and MAD:
+     
+     reported_heights %>% 
+     group_by(sex) %>%
+     summarize(average = mean(height), sd = sd(height),
+                median = median(height), MAD = mad(height))
+     
+#> # A tibble: 2 x 5
+#>   sex    average    sd median   MAD
+#>   <chr>    <dbl> <dbl>  <dbl> <dbl>
+#> 1 Female    63.4  27.9   64.2  4.05
+#> 2 Male     103.  530.    70    4.45
+
+# This suggests that we have outliers, which is confirmed by simply creating a
+# boxplot:
+     
+     reported_heights %>% 
+     ggplot(aes(sex, height)) + 
+     geom_boxplot()

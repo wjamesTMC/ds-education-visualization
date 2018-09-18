@@ -109,4 +109,42 @@ mean(abs(z) < 2)
 # Quantile-quantile QQ plots
 # --------------------------------------------------------------------------------
 
+# A systematic way to assess how well the normal distribution fits the data is
+# to check if the observed and predicted proportions match. In general, the
+# approach of the QQ-plot is as follows:
+
+# Define a series of proportions p=0.05,….95p=0.05,….95.
+
+# For each pp, determine the value qq so that the proportion of values in the
+# data below qq is pp. The qqs are referred to as the quantiles.
+
+# To give a quick example, for the male heights data we have that:
+
+mean(x <= 69.5)
+#> [1] 0.515
+
+# 50% are shorter or equal to 69 inches. This implies that if p=0.50p=0.50 then
+# q=69.5q=69.5. Now we define a series of pp:
+     
+p <- seq(0.05, 0.95, 0.05)
+
+# If the quantiles for the data match the quantiles for the normal, then it must
+# be because the data follows a normal distribution.
+
+# QUARTILE FUNCTION
+# To obtain the quantiles from the data, we can use the quantile function like
+# this:
+     
+observed_quantiles <- quantile(x, p)
+
+# To obtain the theoretical normal distribution quantiles, with the
+# corresponding average and SD, we use the qnorm function:
+    
+theoretical_quantiles <- qnorm( p, mean = mean(x), sd = sd(x))
+
+# To see if they match or not, we plot them against each other and draw the
+# identity line:
+     
+plot(theoretical_quantiles, observed_quantiles)
+abline(0,1)
 

@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------------
 #
-# <title>
+# ggplot
 #
 # --------------------------------------------------------------------------------
 
@@ -9,6 +9,9 @@ library(tidyverse)
 library(dslabs)
 library(dplyr)
 library(ggplot2)
+library(ggthemes)
+library(ggrepel)
+library(gridExtra)
 library(Lahman)
 library(HistData)
 
@@ -17,11 +20,11 @@ library(HistData)
 # file for this function, we see that the first argument is used to specify what
 # data is associated with this object:
      
-     ggplot(data = murders)
+ggplot(data = murders)
 
 # We can also pipe the data. So this line of code is equivalent to the one above:
      
-     murders %>% ggplot()
+murders %>% ggplot()
 
 # What has happened above is that the object was created and because it was not
 # assigned, it was automatically evaluated. But we can define an object, for
@@ -241,3 +244,214 @@ p <- p + geom_abline(intercept = log10(r), lty = 2, color = "darkgrey") +
      geom_point(aes(col=region), size = 3) 
 
 # Note that we redefined p.
+
+# Adjustments
+
+# The default plots created by ggplot2 are already very useful. However, we
+# frequently need to make minor tweaks to the default behavior. Although it is
+# not always obvious how to make these even with the cheat sheet, ggplot2 is
+# very flexible.
+
+# For example, we can make changes to the legend via the scale_color_discrete
+# function. In our plot the word region is capitalized and we can change it like
+# this:
+     
+p <- p + scale_color_discrete(name = "Region") 
+
+# Add-on packages
+
+# The power of ggplot2 is augmented further due to the availability of add-on
+# packages. The remaining changes needed to put the finishing touches on our
+# plot require the ggthemes and ggrepel packages.
+     
+# The style of a ggplot2 graph can be changed using the theme functions. Several
+# themes are included as part of the ggplot2 package. In fact, for most of the
+# plots in this book, we use a function in the dslabs package that automatically
+# sets a default theme:
+          
+ds_theme_set()
+    
+# Many other themes are added by the package ggthemes. Among those are the
+# theme_economist theme that we used. After installing the package, you can
+# change the style by adding a layer like this:
+          
+p + theme_economist()
+     
+# You can see how some of the other themes look by simply changing the function.
+# For instance, you might try the theme_fivethirtyeight() theme instead.
+     
+# The final difference has to do with the position of the labels. In our plot,
+# some of the labels fall on top of each other. The add-on package ggrepel
+# includes a geometry that adds labels while ensuring that they don’t fall on
+# top of each other. We simply change geom_text with geom_text_repell.
+
+# Now that we are done testing, we can write one piece of code that produces our
+# desired plot from scratch.
+
+library(ggthemes)
+library(ggrepel)
+
+# First define the slope of the line
+r <- murders %>% 
+     summarize(rate = sum(total) /  sum(population) * 10^6) %>% .$rate
+
+# Now make the plot
+murders %>% ggplot(aes(population/10^6, total, label = abb)) +   
+     geom_abline(intercept = log10(r), lty = 2, color = "darkgrey") +
+     geom_point(aes(col=region), size = 3) +
+     geom_text_repel() + 
+     scale_x_log10() +
+     scale_y_log10() +
+     xlab("Populations in millions (log scale)") + 
+     ylab("Total number of murders (log scale)") +
+     ggtitle("US Gun Murders in 2010") + 
+     scale_color_discrete(name = "Region") +
+     theme_economist()
+
+# Let’s start with the histogram. First, we need to use dplyr to filter the data:
+     
+heights %>% filter(sex=="Male")
+
+# Once we have a dataset, the next step is deciding what geometry we need. If
+# you guessed geom_histogram, you guessed correctly. Looking at the help file
+# for this function we learn that the only required argument is x, the variable
+# for which we will construct a histogram. The code looks like this:
+     
+p <- heights %>% 
+     filter(sex=="Male") %>% 
+     ggplot(aes(x = height)) 
+
+p + geom_histogram()
+#> `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+# As before, we can drop the x =.
+
+# This call gives us a message:
+     
+#> stat_bin() using bins = 30. Pick better value with binwidth.
+
+# We previously used a bin size of 1 inch, so the code looks like this:
+     
+p + geom_histogram(binwidth = 1)
+
+# Finally, if for aesthetic reasons we want to add color, we use the arguments
+# described in the help file. We also add labels and a title.
+
+# To create a smooth density, we need a different geometry: we used geom_density instead.
+p + geom_density()
+
+# To fill in with color, we can use the fill argument.
+p + geom_density(fill="blue")
+
+# QQ-plots
+
+# For qq-plots we use the geom_qq geometry. From the help file, we learn that we
+# need to specify the sample (we will learn about samples in a later chapter).
+
+p <- heights %>% filter(sex=="Male") %>%
+     ggplot(aes(sample = height)) 
+p + geom_qq()
+
+# By default the sample variable is compared to a normal distribution with
+# average 0 and standard deviation 1. To change this, again from the help file,
+# we use the dparams arguments.
+
+params <- heights %>% filter(sex=="Male") %>%
+     summarize(mean = mean(height), sd = sd(height))
+
+p  +  geom_qq(dparams = params)
+
+# Adding an identity line is as simple as assigning another layer. For straight
+# lines, we use the geom_abline function. To help you remember the name of this
+# function, remember that the ab in front of line serves to remind us that we
+# need to supply an intercept (a) and slope (b) to draw the line y=a+bxy=a+bx.
+# The default is the identity a=0 and b=1
+
+p +  geom_qq(dparams = params) + 
+     geom_abline()
+
+# Another option here is to scale the data first and the make a qqplot against
+# the standard normal:
+
+heights %>% 
+     filter(sex=="Male") %>%
+     ggplot(aes(sample = scale(height))) + 
+     geom_qq() +
+     geom_abline()
+
+# Grids of plots
+
+# There are often reasons to graph plots next to each other. The gridExtra
+# package permits us to do that:
+     
+p <- heights %>% filter(sex=="Male") %>% ggplot(aes(x = height)) 
+p1 <- p + geom_histogram(binwidth = 1, fill = "blue", col="black")
+p2 <- p + geom_histogram(binwidth = 2, fill = "blue", col="black")
+p3 <- p + geom_histogram(binwidth = 3, fill = "blue", col="black")
+
+# To print them all side-by-side, we can use the function grid.arrange in the
+# gridExtra package:
+     
+library(gridExtra)
+grid.arrange(p1,p2,p3, ncol = 3)
+
+# Quick plots with qplot
+
+library(tidyverse)
+library(dslabs)
+data(murders)
+
+# We have learned the powerful approach to generating visualization with ggplot.
+# However, there are instance in which all we want is to make quick plot of, for
+# example, a histogram of the values in a vector, a scatter plots of the values
+# in two vectors, or a boxplot using a categorical and numeric vectors. We
+# demonstrated how to generate these plots with hist, plot, and boxplot.
+# However, if we want to keep consistent with the ggplot style we can use the
+# function qplot.
+
+# So if we have values in a vector, say
+
+x <- murders$population
+
+# and we want to make a histogram with ggplot, we would have to type something like
+
+data.frame(x = x) %>% 
+     ggplot(aes(x)) +
+     geom_histogram(bins=15)
+
+# Using R-base it is much quicker:
+
+     hist(x)
+
+# However, using qplot we can generate a plot using the ggplot style just as quickly:
+
+     qplot(x, bins=15)
+
+# Looking at the help file for the qplot function we see several ways in which
+# we can improve the look of the plot:
+
+     qplot(x, bins=15, color = I("black"), xlab = "Population")
+
+# The reason we use I("black") is because we want qplot to treat "black" as a
+# character rather than convert it to a factor, which is the default behavior
+# within aes, which is internally called here. In general, the function I is
+# used in R to say “keep it as it is!”.
+     
+# One convenient feature of qplot is that it guesses what plot we want. For
+# example, if we call it with two variables we get a scatterplot
+
+     y <- murders$total
+     qplot(x, y)
+
+# and if the first argument is a factor we get a points plot like this:
+     
+     f <-murders$region
+     qplot(f, y)
+
+# We can also explicitly ask for a geometry using the geom argument:
+     
+     qplot(f, y, geom = "boxplot")
+
+# We can also explicitly tell qplot what dataset to use:
+     
+     qplot(population, total, data = murders)

@@ -337,7 +337,8 @@ p + geom_histogram(binwidth = 1)
 # Finally, if for aesthetic reasons we want to add color, we use the arguments
 # described in the help file. We also add labels and a title.
 
-# To create a smooth density, we need a different geometry: we used geom_density instead.
+# To create a smooth density, we need a different geometry: we used geom_density instead
+
 p + geom_density()
 
 # To fill in with color, we can use the fill argument.

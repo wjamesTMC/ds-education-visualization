@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------------
 #
-# Code from Chapter 22: Case Studies in Visualization
+# Case Study: Trends in World Health and Economics
 #
 # --------------------------------------------------------------------------------
 
@@ -372,3 +372,216 @@ gapminder %>%
      scale_x_continuous(trans = "log2") + 
      facet_grid(year ~ group)
 
+
+# We remake the plots using only countries with data available for both years.
+# In the data wrangling chapter, we will learn tidyverse tools that permit us to
+# write efficient code for this, but here we can use simple code using the
+# intersect function:
+     
+country_list_1 <- gapminder %>% 
+     filter(year == past_year & !is.na(dollars_per_day)) %>% 
+     .$country
+
+country_list_2 <- gapminder %>% 
+     filter(year == present_year & !is.na(dollars_per_day)) %>% 
+     .$country
+
+country_list <- intersect(country_list_1, country_list_2)
+
+# These 108 account for 86 % of the world population, so this subset should be
+# representative.
+
+# To see which specific regions improved the most, we can remake the boxplots we
+# made above but now adding the year 2010:
+     
+p <- gapminder %>% 
+     filter(year %in% c(past_year, present_year) & country %in% country_list) %>%
+     ggplot() +
+     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+     xlab("") +
+     scale_y_continuous(trans = "log2")  
+
+# and then using facet to compare the two years:
+     
+p + geom_boxplot(aes(region, dollars_per_day, fill = continent)) +
+     facet_grid(year~.)
+
+# Instead of faceting, we keep the data from each year together and ask ggplot2
+# to color (or fill) them depending on the year. Note that groups are
+# automatically separated by year and each pair of boxplots drawn next to each
+# other. Finally, because year is a number, we turn it into a factor since
+# ggplot2 automatically assigns a color to each category of a factor:
+     
+p + geom_boxplot(aes(region, dollars_per_day, fill = factor(year)))
+
+# Density plots
+
+# We have used data exploration to discover that the income gap between rich and
+# poor countries has narrowed considerably during the last 40 years. We used a
+# series of histograms and boxplots to see this. Here we suggest a succinct way
+# to convey this message with just one plot. We will use smooth density plots.
+
+# Let’s start by noting that density plots for income distribution in 1970 and
+# 2010 deliver the message that the gap is closing:
+     
+gapminder %>% 
+     filter(year %in% c(past_year, present_year) & country %in% country_list) %>%
+     ggplot(aes(dollars_per_day)) +
+     geom_density(fill = "grey") + 
+     scale_x_continuous(trans = "log2") + 
+     facet_grid(year~.)
+
+# We first need to learn how to make these smooth densities in a way that
+# preserves information on the number of countries in each group. To understand
+# why we need this, note the discrepancy in the size of each group:
+     
+# Yet when we overlay two densities, the default is to have the area represented
+# by each distribution add up to 1, regardless of the size of each group:
+     
+gapminder %>% 
+     filter(year %in% c(past_year, present_year) & country %in% country_list) %>%
+     mutate(group = ifelse(region %in% west, "West", "Developing")) %>%
+     ggplot(aes(dollars_per_day, fill = group)) +
+     scale_x_continuous(trans = "log2") +
+     geom_density(alpha = 0.2) + 
+     facet_grid(year ~ .)
+
+# Accessing computed variables
+
+# To have the areas of these densities be proportional to the size of the
+# groups, we can simply multiply the y-axis values by the size of the group.
+# From the geom_density help file, we see that the functions compute a variable
+# called count that does exactly this. We want this variable to be on the y-axis
+# rather than the density.
+
+# In ggplot2, we access these variables by surrounding the name with two dots
+# ... So we will use the following mapping:
+     
+aes(x = dollars_per_day, y = ..count..)
+
+# We can now create the desired plot by simply changing the mapping in the
+# previous code chunk:
+     
+p <- gapminder %>% 
+     filter(year %in% c(past_year, present_year) & country %in% country_list) %>%
+     mutate(group = ifelse(region %in% west, "West", "Developing")) %>%
+     ggplot(aes(dollars_per_day, y = ..count.., fill = group)) +
+     scale_x_continuous(trans = "log2")
+
+p + geom_density(alpha = 0.2) + facet_grid(year ~ .)
+
+# If we want the densities to be smoother, we use the bw argument. We tried a
+# few and decided on 0.75:
+     
+p + geom_density(alpha = 0.2, bw = 0.75) + facet_grid(year ~ .)
+
+# ‘case_when’
+
+# We can actually make this figure somewhat more informative. From the
+# exploratory data analysis, we noticed that many of the countries that most
+# improved were from Asia. We can easily alter the plot to show key regions
+# separately.
+
+# We introduce the case_when function which is useful for defining groups. It
+# currently does not have a data argument (this might change) so we need to
+# access the components of our data table using the dot placeholder:
+     
+gapminder <- gapminder %>% 
+     mutate(group = case_when(
+          .$region %in% west ~ "West",
+          .$region %in% c("Eastern Asia", "South-Eastern Asia") ~ "East Asia",
+          .$region %in% c("Caribbean", "Central America", "South America") ~ "Latin America",
+          .$continent == "Africa" & .$region != "Northern Africa" ~ "Sub-Saharan Africa",
+          TRUE ~ "Others"))
+
+# We turn this group variable into a factor to control the order of the levels:
+     
+gapminder <- gapminder %>% 
+     mutate(group = factor(group, levels = c("Others", "Latin America", "East Asia","Sub-Saharan Africa", "West")))
+
+# Now we can now easily plot the densities for each region. We use color and size to clearly see the tops:
+     
+p <- gapminder %>% 
+     filter(year %in% c(past_year, present_year) & country %in% country_list) %>%
+     ggplot(aes(dollars_per_day, y = ..count.., fill = group, color = group)) +
+     scale_x_continuous(trans = "log2")
+
+p + geom_density(alpha = 0.2, bw = 0.75, size = 2) + facet_grid(year ~ .)
+
+# The plot is cluttered and somewhat hard to read. A clearer picture is
+# sometimes achieved by stacking the densities on top of each other:
+     
+p + geom_density(alpha = 0.2, bw = 0.75, position = "stack") + facet_grid(year ~ .)
+
+# As a final point, we note that these distributions weigh every country the
+# same. So if most of the population is improving, but living in a very large
+# country, such as China, we might not appreciate this. We can actually weight
+# the smooth densities using the weight mapping argument.
+
+# Ecological fallacy
+
+# Throughout this section, we have been comparing regions of the world. We have
+# seen that, on average, some regions do better than others. In this section, we
+# focus on describing the importance of variability within the groups when
+# examining the relationship between a country’s infant mortality rates and
+# average income.
+
+# We start by comparing these quantities across regions, but, before doing this,
+# we define a few more regions:
+     
+gapminder <- gapminder %>% 
+     mutate(group = case_when(
+          .$region %in% west ~ "The West",
+          .$region %in% "Northern Africa" ~ "Northern Africa",
+          .$region %in% c("Eastern Asia", "South-Eastern Asia") ~ "East Asia",
+          .$region == "Southern Asia"~ "Southern Asia",
+          .$region %in% c("Central America", "South America", "Caribbean") ~ "Latin America",
+          .$continent == "Africa" & .$region != "Northern Africa" ~ "Sub-Saharan Africa",
+          .$region %in% c("Melanesia", "Micronesia", "Polynesia") ~ "Pacific Islands"))
+
+# We then compute these quantities for each region:
+     
+surv_income <- gapminder %>% 
+     filter(year %in% present_year & !is.na(gdp) & !is.na(infant_mortality) & !is.na(group)) %>%
+     group_by(group) %>%
+     summarize(income = sum(gdp)/sum(population)/365,
+               infant_survival_rate = 1-sum(infant_mortality/1000*population)/sum(population)) 
+
+surv_income %>% arrange(income)
+#> # A tibble: 7 x 3
+#>   group              income infant_survival_rate
+#>   <chr>               <dbl>                <dbl>
+#> 1 Sub-Saharan Africa   1.76                0.936
+#> 2 Southern Asia        2.07                0.952
+#> 3 Pacific Islands      2.70                0.956
+#> 4 Northern Africa      4.94                0.970
+#> 5 Latin America       13.2                 0.983
+#> 6 East Asia           13.4                 0.985
+#> # ... with 1 more row
+
+# This shows a dramatic difference. While in the West less than 0.5% of infants
+# die, in Sub-Saharan Africa the rate is higher than 6%!
+
+# In this plot, we introduce the use of the limit argument which lets us change
+# the range of the axes. We are making the range larger than the data requires
+# because we will later compare this plot to one with more variability and we
+# want the ranges to be the same. We also introduce the breaks argument, which
+# lets us set the location of the axes labels. Finally, we introduce a new
+# transformation, the logistic transformation.
+
+# Based on the plot above, do we conclude that a country with a low income is
+# destined to have low survival rate? Do we conclude that all survival rates in
+# Sub-Saharan Africa are all lower than in Southern Asia, which in turn are
+# lower than in the Pacific Islands, and so on?
+     
+# Jumping to this conclusion based on a plot showing averages is referred to as
+# the ecological fallacy. The almost perfect relationship between survival rates
+# and income is only observed for the averages at the region level. Once we show
+# all the data, we see a somewhat more complicated story.
+
+# We see that there is a large amount of variability. We see that countries from
+# the same regions can be quite different and that countries with the same
+# income can have different survival rates. For example, while on average
+# Sub-Saharan Africa had the worse health and economic outcomes, there is wide
+# variability within that group. Mauritius and Botswana are doing better than
+# Angola and Sierra Leone, with Mauritius comparable to Western countries.

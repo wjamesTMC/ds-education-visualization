@@ -12,6 +12,7 @@ library(ggplot2)
 library(ggthemes)
 library(ggrepel)
 library(gridExtra)
+library(RColorBrewer)
 library(Lahman)
 library(HistData)
 
@@ -82,7 +83,6 @@ dat %>%
                show.legend = FALSE) +
      xlab("") + ylab("Life Expectancy")
 
-library(ggrepel)
 dat %>% 
      mutate(year = paste0("life_expectancy_", year)) %>%
      select(country, year, life_expectancy) %>% spread(year, life_expectancy) %>% 

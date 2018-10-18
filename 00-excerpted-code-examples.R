@@ -162,6 +162,10 @@ heights %>%
      ggplot(aes(height, fill=sex)) + 
      geom_density(alpha = 0.2)
 
+# -------------------------------------------------------------------------
+# DataCamp examples using dplyr
+# -------------------------------------------------------------------------
+
 library(dplyr)
 library(NHANES)
 data(NHANES)

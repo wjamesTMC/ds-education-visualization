@@ -162,3 +162,66 @@ heights %>%
      ggplot(aes(height, fill=sex)) + 
      geom_density(alpha = 0.2)
 
+library(dplyr)
+library(NHANES)
+data(NHANES)
+## fill in what is needed
+tab <- NHANES %>% filter(AgeDecade == " 20-29" & Gender == "female")
+
+library(dplyr)
+library(NHANES)
+data(NHANES)
+## complete this line of code.
+ref <- NHANES %>% filter(AgeDecade == " 20-29" & Gender == "female") %>%
+     filter(AgeDecade == " 20-29" & Gender == "female") %>%
+     summarize(average = mean(BPSysAve, na.rm = TRUE), 
+               standard_deviation = sd(BPSysAve, na.rm=TRUE))
+
+library(dplyr)
+library(NHANES)
+data(NHANES)
+## modify the code we wrote for previous exercise.
+ref_avg <- NHANES %>%
+     filter(AgeDecade == " 20-29" & Gender == "female") %>%
+     summarize(average = mean(BPSysAve, na.rm = TRUE), 
+               standard_deviation = sd(BPSysAve, na.rm=TRUE))  %>% .$average
+
+library(dplyr)
+library(NHANES)
+data(NHANES)
+## complete the line
+NHANES %>%
+     filter(AgeDecade == " 20-29"  & Gender == "female") %>%
+     summarize(min = min(BPSysAve, na.rm = TRUE), max = max(BPSysAve, na.rm = TRUE))
+
+library(dplyr)
+library(NHANES)
+data(NHANES)
+##complete the line with group_by and summarize
+NHANES %>%
+     filter(Gender == "female") %>% group_by(AgeDecade) %>%
+     summarize(average = mean(BPSysAve, na.rm = TRUE), standard_deviation = sd(BPSysAve, na.rm = TRUE))
+
+library(dplyr)
+library(NHANES)
+data(NHANES)
+NHANES %>%
+     filter(Gender == "male") %>% group_by(AgeDecade) %>%
+     summarize(average = mean(BPSysAve, na.rm = TRUE), standard_deviation = sd(BPSysAve, na.rm = TRUE))
+
+library(NHANES)
+data(NHANES)
+NHANES %>%
+     group_by(AgeDecade, Gender) %>%
+     summarize(average = mean(BPSysAve, na.rm = TRUE), standard_deviation = sd(BPSysAve, na.rm = TRUE))
+
+library(dplyr)
+library(NHANES)
+data(NHANES)
+NHANES %>%
+     group_by(Race1) %>% 
+     filter(Gender == "male" & AgeDecade == " 40-49") %>%  
+     summarize(average = mean(BPSysAve, na.rm = TRUE), 
+               standard_deviation = sd(BPSysAve, na.rm = TRUE)) %>% 
+     arrange(average)
+

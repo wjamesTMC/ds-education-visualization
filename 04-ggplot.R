@@ -456,3 +456,126 @@ data.frame(x = x) %>%
 # We can also explicitly tell qplot what dataset to use:
      
      qplot(population, total, data = murders)
+     
+     
+# -------------------------------------------------------------------------
+# Datacamp Exercises
+# -------------------------------------------------------------------------
+     
+     library(HistData)
+     data(Galton)
+     x <- Galton$child
+     mean(x)
+     median(x)
+     
+     library(HistData)
+     data(Galton)
+     x <- Galton$child
+     sd(x)
+     mad(x)
+     
+     library(HistData)
+     data(Galton)
+     x <- Galton$child
+     x_with_error <- x
+     x_with_error[1] <- x_with_error[1]*10
+     mean(x_with_error) - mean(x)
+     
+     x_with_error <- x
+     x_with_error[1] <- x_with_error[1]*10
+     sd(x_with_error) - sd(x)
+     
+     x_with_error <- x
+     x_with_error[1] <- x_with_error[1]*10
+     median(x_with_error) - median(x)
+     
+     x_with_error <- x
+     x_with_error[1] <- x_with_error[1]*10
+     mad(x_with_error) - mad(x)
+     
+     x <- Galton$child
+     error_avg <- function(k){
+          x[1] <- k
+          mean(x)
+     }
+     error_avg(10000)
+     error_avg(-10000)
+     
+     library(dplyr)
+     library(ggplot2)
+     library(dslabs)
+     data(heights)
+     data(murders)
+     p <- ggplot(murders)
+     typeof(p)
+     class(p)
+     
+     data(heights)
+     # define ggplot object called p like in the previous exercise but using a pipe
+     p <- heights %>% ggplot()
+     
+     # Fill in the blanks
+     murders %>% ggplot(aes(x = population, y = total)) +
+          geom_point()
+     
+     murders %>% ggplot(aes(x = total, y = population)) +
+          geom_point()
+     
+     library(dplyr)
+     library(ggplot2)
+     library(dslabs)
+     data(murders)
+     ## edit the next line to add the label
+     murders %>% ggplot(aes(population, total, label = abb)) +
+          geom_label() +
+          geom_point()
+     
+     murders %>% ggplot(aes(population, total,label= abb)) +
+          geom_label(color = "blue")
+     
+     ## edit this code
+     murders %>% ggplot(aes(population, total, color = region, label = abb)) +
+          geom_label()
+     
+     p <- murders %>% ggplot(aes(population, total, label = abb, color = region)) + geom_label()
+     ## add layers to p here
+     p + scale_x_log10() + 
+          scale_y_log10()
+     
+     p <- murders %>% ggplot(aes(population, total, label = abb, color = region)) +
+          geom_label()
+     # add a layer to add title to the next line
+     p + scale_x_log10() + 
+          scale_y_log10() +
+          ggtitle("Gun murder data")
+     
+     # define p here
+     p <- heights %>% ggplot() + geom_point(aes(x = height))
+     
+     p <- heights %>% 
+          ggplot(aes(height))
+     ## add a layer to p
+     p + geom_histogram()
+     
+     p <- heights %>% 
+          ggplot(aes(height))
+     ## add the geom_histogram layer but with the requested argument
+     p + geom_histogram(binwidth = 1)
+     
+     ## add the correct layer using +
+     heights %>% 
+          ggplot(aes(height)) + geom_density()
+     
+     # add the group argument then a layer with +
+     heights %>% 
+          ggplot(aes(height, group = sex)) + geom_density()
+               
+     # edit the next line to use color instead of group then add a density layer
+     heights %>% 
+          ggplot(aes(height, color = sex)) + geom_density()
+     
+     heights %>% 
+          ggplot(aes(height, fill = sex)) + 
+          geom_density(alpha = 0.2) 
+     
+     

@@ -232,3 +232,59 @@ mutate(original_heights = height, height = as.numeric(height))
      reported_heights %>% 
      ggplot(aes(sex, height)) + 
      geom_boxplot()
+
+# --------------------------------------------------------------------------
+# Datacamp Exercises
+# --------------------------------------------------------------------------
+
+     library(dslabs)
+     data(heights)
+     x <- heights$height[heights$sex == "Male"]
+     mean(69 < x & x <= 72)
+     
+     library(dslabs)
+     data(heights)
+     x <- heights$height[heights$sex=="Male"]
+     avg <- mean(x)
+     stdev <- sd(x)
+     pnorm(72, avg, stdev) - pnorm(69, avg, stdev)
+     
+     library(dslabs)
+     data(heights)
+     x <- heights$height[heights$sex == "Male"]
+     exact <- mean(x > 79 & x <= 81)
+     avg <- mean(x)
+     stdev <- sd(x)
+     approx <- pnorm(81, avg, stdev) - pnorm(79, avg, stdev)
+     exact / approx
+     
+     1 - pnorm(84, mean = 69, sd = 3)
+     
+     p <- 1 - pnorm(84, mean = 69, sd = 3)
+     round(p * 10^9)
+     
+     p <- 1 - pnorm(84, mean = 69, sd = 3)
+     N <- round(p * 10^9)
+     10 / N
+     
+     ## Change the solution to previous answer
+     p <- 1 - pnorm(80, 69, 3)
+     N <- round(p * 10^9)
+     150 / N
+     
+     library(dslabs)
+     data(heights)
+     male <- heights$height[heights$sex=="Male"]
+     female <- heights$height[heights$sex=="Female"]
+     length(male)
+     length(female)
+     
+     library(dslabs)
+     data(heights)
+     male <- heights$height[heights$sex=="Male"]
+     female <- heights$height[heights$sex=="Female"]
+     male_percentiles <- quantile(male, probs = c(0.1, 0.3, 0.5, 0.7, 0.9))
+     female_percentiles <- quantile(female, probs = c(0.1, 0.3, 0.5, 0.7, 0.9))
+     df <- data.frame("female" = female_percentiles, "male" = male_percentiles)
+     df
+     
